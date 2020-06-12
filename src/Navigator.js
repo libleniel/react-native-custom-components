@@ -431,6 +431,28 @@ var Navigator = createReactClass({
         'initialRoute is not in initialRouteStack.'
       );
     }
+
+    /* Extra initialization from componentWillMount 
+    */
+    // TODO(t7489503): Don't need this once ES6 Class landed.
+    this.__defineGetter__('navigationContext', this._getNavigationContext);
+
+    this._subRouteFocus = [];
+    this.parentNavigator = this.props.navigator;
+    this._handlers = {};
+    this.springSystem = new rebound.SpringSystem();
+    this.spring = this.springSystem.createSpring();
+    this.spring.setRestSpeedThreshold(0.05);
+    this.spring.setCurrentValue(0).setAtRest();
+    this.panGesture = PanResponder.create({
+      onMoveShouldSetPanResponder: this._handleMoveShouldSetPanResponder,
+      onPanResponderRelease: this._handlePanResponderRelease,
+      onPanResponderMove: this._handlePanResponderMove,
+      onPanResponderTerminate: this._handlePanResponderTerminate,
+    });
+    this._interactionHandle = null;
+    
+    /* Return State */
     return {
       sceneConfigStack: routeStack.map(
         (route) => this.props.configureScene(route, routeStack)
@@ -444,17 +466,11 @@ var Navigator = createReactClass({
     };
   },
 
-  componentWillMount: function() {
-    // TODO(t7489503): Don't need this once ES6 Class landed.
-    this.__defineGetter__('navigationContext', this._getNavigationContext);
+  componentDidMount: function() {
+    this._isMounted = true;
 
-    this._subRouteFocus = [];
-    this.parentNavigator = this.props.navigator;
-    this._handlers = {};
-    this.springSystem = new rebound.SpringSystem();
-    this.spring = this.springSystem.createSpring();
-    this.spring.setRestSpeedThreshold(0.05);
-    this.spring.setCurrentValue(0).setAtRest();
+    /* Extra initialization from componentWillMount 
+    */
     this.spring.addListener({
       onSpringEndStateChange: () => {
         if (!this._interactionHandle) {
@@ -468,18 +484,7 @@ var Navigator = createReactClass({
         this._completeTransition();
       },
     });
-    this.panGesture = PanResponder.create({
-      onMoveShouldSetPanResponder: this._handleMoveShouldSetPanResponder,
-      onPanResponderRelease: this._handlePanResponderRelease,
-      onPanResponderMove: this._handlePanResponderMove,
-      onPanResponderTerminate: this._handlePanResponderTerminate,
-    });
-    this._interactionHandle = null;
-    this._emitWillFocus(this.state.routeStack[this.state.presentedIndex]);
-  },
 
-  componentDidMount: function() {
-    this._isMounted = true;
     this._handleSpringUpdate();
     this._emitDidFocus(this.state.routeStack[this.state.presentedIndex]);
     this._enableTVEventHandler();
