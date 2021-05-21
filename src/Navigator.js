@@ -1017,10 +1017,10 @@ var Navigator = createReactClass({
     }
     var styleToUse = {};
     var useFn = index < fromIndex || index < toIndex ?
-      sceneConfig.animationInterpolators.out :
-      sceneConfig.animationInterpolators.into;
+      sceneConfig.animationInterpolators && sceneConfig.animationInterpolators.out :
+      sceneConfig.animationInterpolators && sceneConfig.animationInterpolators.into;
     var directionAdjustedProgress = fromIndex < toIndex ? progress : 1 - progress;
-    var didChange = useFn(styleToUse, directionAdjustedProgress);
+    var didChange = useFn && useFn(styleToUse, directionAdjustedProgress);
     if (didChange) {
       viewAtIndex.setNativeProps({style: styleToUse});
     }
